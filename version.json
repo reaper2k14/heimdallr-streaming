@@ -1,0 +1,10 @@
+{
+    "app_description": "video streaming edge service",
+    "app_name": "streaming-service",
+    "version": {
+        "major": 0,
+        "minor": 0,
+        "patch": 0,
+        "rc": "rc.2"
+    }
+}

@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    co.elastic.log/json.expand_keys: 'true'
+    co.elastic.logs/enabled: 'true'
+    co.elastic.logs/fileset.stderr: error
+    co.elastic.logs/fileset.stdout: streaming
+    co.elastic.logs/json.add_error_key: 'true'
+    co.elastic.logs/json.keys_under_root: 'true'
+  labels:
+    app: {{ .Release.Name }}
+    version: {{ .Values.deployment.version }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      version: {{ .Values.deployment.version }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        version: {{ .Values.deployment.version }}
+    spec:
+      containers:
+        - env:
+            - name: CORS
+              value: {{ .Values.container.cors }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-conf
+                optional: false
+          image: {{ .Values.deployment.image }}
+          imagePullPolicy: Always
+          name: app
+          ports:
+            - containerPort: {{ .Values.port }}
+              name: http
+              protocol: TCP
+        - image: nginx:alpine
+          imagePullPolicy: Always
+          name: cache
+          volumeMounts:
+            - mountPath: /etc/nginx/conf.d
+              name: cache-configmap
+            - mountPath: /cache
+              name: cache-storage
+      imagePullSecrets:
+        - name: {{ .Values.deployment.pullsecret }}
+      initContainers:
+        - command:
+            - sh
+            - '-c'
+            - chown -R nginx:nginx /cache
+          image: nginx:alpine
+          imagePullPolicy: IfNotPresent
+          name: init-cache
+          volumeMounts:
+            - mountPath: /cache
+              name: cache-storage
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: nginx-streaming-cache-settings
+          name: cache-configmap
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 2G
+          name: cache-storage

@@ -1,0 +1,10 @@
+questions:
+    - default: "docker.dev.cloud.biggo.com"
+      description: Credentials to be used to pull docker images from the harbor repository.
+      group: General Settings
+      label: Pull Secret
+      type: enum
+      variable: deployment.pullsecret
+      options:
+      - "docker.dev.cloud.biggo.com"
+      - "docker.cloud.biggo.com"

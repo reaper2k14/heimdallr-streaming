@@ -1,0 +1,243 @@
+kind: pipeline
+type: docker
+name: development-pr
+
+clone:
+  skip_verify: true
+
+trigger:
+  branch:
+    - cicd_drone_helm
+  event:
+    - pull_request
+
+steps:
+  - name: tagging
+    image: docker.dev.cloud.biggo.com/test/plugin-docker
+    settings:
+      gituser:
+        from_secret: git-user
+      gittoken:
+        from_secret: git-token
+      release: false
+      root: ./src
+      prefix: stream-service
+
+  - name: build
+    image: golang
+    commands:
+      - cd ./src
+      - CGO_ENABLED=0 go build --ldflags '-extldflags "-static"' -o ../build app
+
+  - name: docker
+    image: plugins/docker
+    settings:
+      dry_run: true
+      registry: docker.dev.cloud.biggo.com
+      repo: docker.dev.cloud.biggo.com/heimdallr/stream-service
+#---
+#kind: pipeline
+#type: docker
+#name: development-push
+#
+#clone:
+#  skip_verify: true
+#
+#trigger:
+#  branch:
+#    - cicd_drone_helm
+#  event:
+#    - push
+#
+#steps:
+#  - name: tagging
+#    image: docker.dev.cloud.biggo.com/test/plugin-docker
+#    settings:
+#      gituser:
+#        from_secret: git-user
+#      gittoken:
+#        from_secret: git-token
+#      release: false
+#      root: ./src/services/stream-service
+#      prefix: stream-service
+#
+#  - name: build
+#    image: golang
+#    commands:
+#      - cd ./src/services/stream-service/code
+#      - CGO_ENABLED=0 go build --ldflags '-extldflags "-static"' ./main.go
+#
+#  - name: docker
+#    image: plugins/docker
+#    settings:
+#      username:
+#        from_secret: droneio-dev-docker-user
+#      password:
+#        from_secret: droneio-dev-docker-secret
+#      insecure: true
+#      registry: docker.dev.cloud.biggo.com
+#      repo: docker.dev.cloud.biggo.com/heimdallr/stream-service
+#      dockerfile: ./src/services/stream-service/Dockerfile
+#
+#  - name: helm
+#    image: docker.dev.cloud.biggo.com/test/plugin-helm
+#    settings:
+#      gituser:
+#        from_secret: git-user
+#      gittoken:
+#        from_secret: git-token
+#      helmBranch: debug-development
+#      helmRepo: "https://git.biggo.com/Funmula/helm-repo.git"
+#      root: ./src/services/stream-service
+#      image: docker.dev.cloud.biggo.com/heimdallr/stream-service
+#---
+#kind: pipeline
+#type: docker
+#name: staging-pr
+#
+#clone:
+#  skip_verify: true
+#
+#trigger:
+#  branch:
+#    - master
+#  event:
+#    - pull_request
+#
+#steps:
+#  - name: tagging
+#    image: docker.dev.cloud.biggo.com/test/plugin-docker
+#    settings:
+#      gituser:
+#        from_secret: git-user
+#      gittoken:
+#        from_secret: git-token
+#      release: false
+#      root: ./src/services/stream-service
+#      prefix: stream-service
+#
+#  - name: build
+#    image: golang
+#    commands:
+#      - cd ./src/services/stream-service/code
+#      - CGO_ENABLED=0 go build --ldflags '-extldflags "-static"' ./main.go
+#
+#  - name: docker
+#    image: plugins/docker
+#    settings:
+#      dry_run: true
+#      registry: docker.biggo.dev
+#      repo: docker.biggo.dev/heimdallr/stream-service
+#      dockerfile: ./src/services/stream-service/Dockerfile
+#---
+#kind: pipeline
+#type: docker
+#name: staging-push
+#
+#clone:
+#  skip_verify: true
+#
+#trigger:
+#  branch:
+#    - master
+#  event:
+#    - push
+#
+#steps:
+#  - name: tagging
+#    image: docker.dev.cloud.biggo.com/test/plugin-docker
+#    settings:
+#      gituser:
+#        from_secret: git-user
+#      gittoken:
+#        from_secret: git-token
+#      release: false
+#      root: ./src/services/stream-service
+#      prefix: stream-service
+#
+#  - name: build
+#    image: golang
+#    commands:
+#      - cd ./src/services/stream-service/code
+#      - CGO_ENABLED=0 go build --ldflags '-extldflags "-static"' ./main.go
+#
+#  - name: docker
+#    image: plugins/docker
+#    settings:
+#      username:
+#        from_secret: droneio-prod-docker-user
+#      password:
+#        from_secret: droneio-prod-docker-secret
+#      insecure: true
+#      registry: docker.biggo.dev
+#      repo: docker.biggo.dev/heimdallr/stream-service
+#      dockerfile: ./src/services/stream-service/Dockerfile
+#
+#  - name: helm
+#    image: docker.dev.cloud.biggo.com/test/plugin-helm
+#    settings:
+#      gituser:
+#        from_secret: git-user
+#      gittoken:
+#        from_secret: git-token
+#      helmBranch: debug-staging
+#      helmRepo: "https://git.biggo.com/Funmula/helm-repo.git"
+#      root: ./src/services/stream-service
+#      image: docker.dev.cloud.biggo.com/heimdallr/stream-service
+#      tag: true
+#---
+#kind: pipeline
+#type: docker
+#name: release
+#
+#clone:
+#  skip_verify: true
+#
+#trigger:
+#  event:
+#    - promote
+#
+#steps:
+#  - name: tagging
+#    image: docker.dev.cloud.biggo.com/test/plugin-docker
+#    settings:
+#      gituser:
+#        from_secret: git-user
+#      gittoken:
+#        from_secret: git-token
+#      release: true
+#      root: ./src/services/stream-service
+#      prefix: stream-service
+#
+#  - name: build
+#    image: golang
+#    commands:
+#      - cd ./src/services/stream-service/code
+#      - CGO_ENABLED=0 go build --ldflags '-extldflags "-static"' ./main.go
+#
+#  - name: docker
+#    image: plugins/docker
+#    settings:
+#      username:
+#        from_secret: droneio-prod-docker-user
+#      password:
+#        from_secret: droneio-prod-docker-secret
+#      insecure: true
+#      registry: docker.biggo.dev
+#      repo: docker.biggo.dev/heimdallr/stream-service
+#      dockerfile: ./src/services/stream-service/Dockerfile
+#
+#  - name: helm
+#    image: docker.dev.cloud.biggo.com/test/plugin-helm
+#    settings:
+#      gituser:
+#        from_secret: git-user
+#      gittoken:
+#        from_secret: git-token
+#      helmBranch: debug-staging
+#      helmRepo: "https://git.biggo.com/Funmula/helm-repo.git"
+#      root: ./src/services/stream-service
+#      image: docker.dev.cloud.biggo.com/heimdallr/stream-service
+#      release: true
+#      tag: true
+#

@@ -1,0 +1,22 @@
+deployment:
+  image: "${PLUGIN_IMAGE}:${DRONE_SEMVER}"
+  pullsecret: "docker.dev.cloud.biggo.com"
+  version: "${DRONE_SEMVER}"
+
+configmap:
+  data:
+    ELASTICSEARCH_URL: "http://elasticsearch68:9200/"
+    MINIO_DOWNLOAD_BUCKET: heimdallr-download
+    MINIO_HOST: localhost
+    MINIO_PORT: 80
+    MINIO_PROTOCOL: http
+    MINIO_STREAMING_BUCKET: heimdallr-stream
+    MINIO_SUBTITLE_BUCKET: heimdallr-subtitle
+    SALT: kood7oiboh3aeghahD8Eefee
+
+container:
+  cors: https://.*\.biggo..*
+  replicas: 1
+
+service:
+  port: 8000
